@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WiFi設定與實作</title>
+    <link href="../css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="../css/all.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body>
+
+    <!-- Side-Nav -->
+    <div class="side-navbar active-nav d-flex justify-content-between flex-wrap flex-column" id="sidebar">
+      <ul class="nav flex-column text-white w-100">
+        <li class="nav-item" style="background-color: #fff;padding-left:10px;padding-top:10px;border-bottom: rgb(255, 115, 0) 2px solid;font-size: 16pt;">
+          <p style="color:rgb(248, 138, 11);font-weight: 700;">物聯網基本應用與實作</p>
+        </li>
+        <li class="mx-2">
+          <span class="menuitem"><a href="index.html" class="nav-link">物聯網簡介、單晶片介紹、設定與軟體安裝</a></span>
+        </li>
+        <li class="mx-2">
+          <span class="menuitem"><a href="program_led.html" class="nav-link">ESP32開發版簡介、程式簡介、全彩LED</a></span>
+        </li>
+        <li class="mx-2">
+          <span class="menuitem"><a href="ai2.html" class="nav-link">APP開發-App Inventro 2</a></span>
+        </li>
+        <li class="mx-2">
+          <span class="menuitem"><a href="bt.html" class="nav-link">單晶片藍芽設定與實作</a></span>
+        </li>
+        <li class="mx-2">
+            <span class="menuitem"><a href="wifi.html" class="nav-link">WiFi設定與實作</a></span>
+          </li>
+          <li class="mx-2">
+            <span class="menuitem"><a href="introhtml.html" class="nav-link">網頁HTML簡介</a></span>
+          </li>     
+        <li class="mx-2">
+          <span class="menuitem"><a href="dht11-fan.html" class="nav-link">單晶片溫度感測與風扇控制</a></span>
+        </li>
+      </ul>
+    </div>
+
+
+    <!-- Main Wrapper -->
+    <div class="p-2 my-container active-cont">
+      <!-- Breadcrumb -->
+      <div class="bg-light px-5" aria-label="breadcrumb" style="height:40px;position:fixed;width:100%;top:0;">
+        <a class="btn border-0" id="menu-btn" style="position:fixed"><i class="fas fa-bars"></i></a>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">WiFi設定與實作</li>
+        </ol>
+      </div>
+      <!--End Top Nav -->
+
+      <!-- main page -->
+      <div style="margin-top:50px;">
+        <div class="px-3">
+          <h3 class="text-danger">ESP32 WiFi模式</h3>
+          <p>
+            ESP32 WiFi包含三種模式 <span class="text-danger">站台(WIFI_STA)、熱點(WIFI_AP)、站台熱點(WIFI_STA_AP)</span>，這裡僅介紹站台與熱點。請注意程式開始必須包含WiFi程式庫。
+          </p>
+          <pre><code>
+#include &lt;WiFi.h&gt;
+          </code></pre>
+        </div>
+
+        <div class="px-3">
+          <h3 class="text-dark">WIFI站台模式</h3>
+          <p>
+            ESP32 WiFi站台模式透過外部熱點接網際網路如下圖：
+          </p>
+          <p><img src="imgs/wifi/wifi-sta.png"></p>
+          <p>
+            ESP32 WiFi站台模式(<span class="text-danger">WiFi.mode(WIFI_STA)</span>)可透過 <span class="text-danger">WiFi.scanNetworks()</span> 命令取得外部熱點個數並藉由 <span class="text-danger">WiFi.SSID、WiFi.RSSI、WiFi.encryptionType</span> 來取得熱點名稱、訊號強度與加密方式(WIFI_AUTH_OPEN、WIFI_AUTH_WEP、WIFI_AUTH_WPA_PSK、WIFI_AUTH_WPA2_PSK、WIFI_AUTH_WPA_WPA2_PSK)，上述加密方式對應至數字 0, 1, 2, 3, 4。以下程式設定ESP32 WiFi站台模式，掃描附近熱點並輸出熱點名稱、訊號強度與加密方式。
+          </p>
+<pre><code>
+#include "WiFi.h" //匯入WiFi程式庫
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(); //中斷任何連接熱點
+  delay(100);
+  int n = WiFi.scanNetworks(); //掃描熱點並傳回熱點個數
+  for (int i=0; i&lt;n; ++i) {
+    // 輸出每個熱點名稱、強度及加密方式
+    Serial.print("熱點:");
+    Serial.print(i+1);
+    Serial.print(": ");
+    Serial.print(WiFi.SSID(i));
+    Serial.print(" (");
+    Serial.print(WiFi.RSSI(i));
+    Serial.print(")");
+    Serial.println(WiFi.encryptionType(i));
+    delay(10);
+  }
+}
+    
+void loop() {
+
+}
+</code></pre>
+        <p>
+          連接熱點須執行 <span class="text-danger">WiFi.begin(熱點SSID名稱,連接密碼)</span>，連接後可藉由 <span class="text-danger">WiFi.status()</span> 命令傳回現在連接狀態，當連接狀態傳回 <span class="text-danger">WL_CONNECTED</span> 表示連上熱點。下列程式將連接同學設定熱點：
+        </p>
+        <pre><code>
+#include "WiFi.h" //匯入WiFi程式庫
+          
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(); //中斷任何連接熱點
+  delay(100);
+  WiFi.begin(連接熱點SSID名稱,連接密碼); //名稱與密碼需置於雙引號中
+  while (WiFi.status() != WL_CONNECTED) { //未接上熱點時每隔1秒檢查一次
+    Serial.print('.');
+    delay(1000);
+  }
+  Serial.println(WiFi.localIP()); //印出鏈接後IP位址
+}
+              
+void loop() {
+          
+}
+          </code></pre>
+        </div>
+        <div class="px-3">
+          <h3 class="text-dark">WIFI熱點模式</h3>
+          <p>
+            ESP32 WiFi熱點模式如下圖：
+          </p>
+          <p><img src="imgs/wifi/wifi-ap.png"></p>
+          <p>
+            ESP32 WiFi熱點模式(<span class="text-danger">WiFi.mode(WIFI_AP)</span>)可透過 <span class="text-danger">WiFi.softAP(站台名稱,站台密碼)</span> 來設定站台名稱與連接密碼，請注意站台名稱與連接密碼需置於雙引號中。熱點設定完畢後，可利用 <span class="text-danger">WiFi.softAPIP()</span> 命令取得熱點IP位址，請注意IP位址資料類型為 <span class="text-danger">IPAddress</span>。
+          </p>
+<pre><code>
+#include "WiFi.h" //匯入WiFi程式庫
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP("長榮1號","12345678"); //密碼一定要8位
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("熱點IP位址");
+  Serial.println(IP);
+}
+    
+void loop() {
+
+}
+</code></pre>
+        </div>
+        <div class="px-3">
+          <h3 class="text-dark">WIFI熱點模式+內建網頁伺服器</h3>
+          <p>
+            網頁伺服器目的用於接收處理使用者網際網路需求，ESP32 WiFi透過 <span class="text-danger">WiFiServer 網頁伺服器變數名稱(連接埠號碼)</span> 宣告網頁伺服器變數名稱及連接埠號碼(預設使用80)後，之後在設定完熱點模式後，藉由命令 <span class="text-danger">WiFiServer 網頁伺服器變數名稱.begin()</span>來開啟伺服器。
+          </p>
+          <pre><code>
+#include "WiFi.h" //匯入WiFi程式庫
+WiFiServer server(80); //設定網頁伺服器變數名稱為 server       
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP("長榮1號","12345678"); //密碼一定要8位
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("熱點IP位址");
+  Serial.println(IP);
+  server.begin();
+}
+                
+void loop() {
+            
+}
+</code></pre>
+          <p>
+            網頁伺服器開啟後，執行程式(loop())中，首先利用命令 <span class="text-danger">server.available()</span> 檢查是否有使用者連接至伺服器，<span class="text-danger">server.available()</span> 傳回 <span class="text-danger">WiFiClient</span> 值，我們用條件判斷檢查是否有傳回值，如果有而且使用者在繼續連線下，我們將透過 <span class="text-danger">client.read()</span> 取得使用者傳送資料，一直讀到 Enter鍵(\n)後再判斷使用者傳送資料。
+          </p>
+          <p>完整網頁控制數位腳位16 LED開關原始碼</p>
+<pre><code>
+#include "WiFi.h" //匯入WiFi程式庫
+
+WiFiServer server(80); //設定網頁伺服器變數名稱為 server  
+String indata; //用於儲存使用者傳送資料     
+void setup() {
+  Serial.begin(115200);
+  pinMode(16,OUTPUT); //設定數位腳位16控制LED開關
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP("長榮1號","12345678"); //密碼一定要8位
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("熱點IP位址");
+  Serial.println(IP);
+  server.begin();
+}
+    
+void loop() {
+  WiFiClient client = server.available(); //取得連接使用者並存於變數client
+  while (client.connected()) {
+    char c = client.read(); //逐字讀入傳送資料
+    indata += c; //將讀入字存到變數 indata
+    if (c=='\n') {
+      if (client) { //設定網際網路HTTP傳回擋頭
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-type:text/html");
+        client.println("Connection: close");
+        client.println();
+      }
+      if (indata.indexOf("GET /on") >= 0) { //使用者網址列 伺服器ip/on 則開啟LED
+        digitalWrite(16, HIGH);
+      } else if (indata.indexOf("GET /off") >= 0) {  //使用者網址列 伺服器ip/off 則關閉LED
+        digitalWrite(16, LOW);
+      }
+      indata="";
+      client.stop();
+    }
+  }
+}
+</code></pre>
+        </div>
+
+        
+
+
+        
+        
+                  
+      </div>
+    </div>
+
+    <!-- bootstrap js -->
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>  
+    
+    <!-- custom js -->
+    <script>
+      var menu_btn = document.querySelector("#menu-btn");
+      var sidebar = document.querySelector("#sidebar");
+      var container = document.querySelector(".my-container");
+      menu_btn.addEventListener("click", () => {
+        sidebar.classList.toggle("active-nav");
+        container.classList.toggle("active-cont");
+      });
+    </script>
+  </body>
+</html>
