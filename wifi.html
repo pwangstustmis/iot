@@ -58,7 +58,21 @@
         <div class="px-3">
           <h3 class="text-danger">ESP32 WiFi模式</h3>
           <p>
-            ESP32 WiFi包含三種模式 <span class="text-danger">站台(WIFI_STA)、熱點(WIFI_AP)、站台熱點(WIFI_STA_AP)</span>，這裡僅介紹站台與熱點。請注意程式開始必須包含WiFi程式庫。
+            WiFi可應用於長距離(50-100公尺)資料傳輸與控制，ESP32 WiFi包含三種模式 <span class="text-danger">站台(WIFI_STA)、熱點(WIFI_AP)、站台熱點(WIFI_STA_AP)</span>。
+          </p>
+          <ul>
+            <li>
+              <span class="text-danger">站台(WIFI_STA)</span>：將ESP 32當作WiFi的客戶端，也就是說必須連接熱點或分享器才能連上網路。
+            </li>
+            <li>
+              <span class="text-danger">熱點(WIFI_AP)</span>：將ESP 32設定為熱點，讓其他WiFi裝置能連接到ESP 32。
+            </li>
+            <li>
+              <span class="text-danger">站台熱點(WIFI_STA_AP)</span>：將ESP 32可設定為熱點或站台。
+            </li>
+          </ul>
+          <p>
+            這裡僅介紹站台與熱點，請注意程式開始必須包含WiFi程式庫。
           </p>
           <pre><code>
 #include &lt;WiFi.h&gt;
@@ -218,10 +232,195 @@ void loop() {
 </code></pre>
         </div>
 
-        
+        <div class="px-3">
+          <h3 class="text-dark">WIFI熱點模式+WebSocket</h3>
+          <p>
+            網頁伺服器透過HTTP通訊協定進行資料傳輸，HTTP通訊協定在資料傳送完畢後即中斷連接，同時如果使用者沒有送出任何要求(Request)、伺服器不會傳回任何訊息，這種資料傳輸模式比較不適用於<span class="text-danger">即時或雙向</span>控制應用，因此將介紹新的傳輸模式<span class="text-danger">WebSocket</span>。
+          </p>
+          <p>
+            <span class="text-danger">WebSocket</span>一開始使用HTTP通訊協定與Socket伺服器連接，當連接之後，連接不會中斷同時提供雙向資訊傳遞，因此非常適用於即時雙向的控制應用。要在ESP 32使用Web Socket，必須下載安裝兩個程式庫 <a href="imgs/wifi/AsyncTCP.zip">AsyncTCP</a>與<a href="imgs/wifi/ESPAsyncWebSer.zip">ESPAsyncWebSer</a>。下載後，請開啟<span class="text-danger">Arduino IDE</span>，選擇<span class="text-danger">草稿碼-匯入程式庫-加入ZIP程式庫</span>，並選擇下載的 <span class="text-danger">AsyncTCP.zip及ESPAsyncWebSer.zip</span>檔。執行時<span class="text-danger">先連上熱點、開啟瀏覽器並輸入192.168.1.2</span>即可顯示控制畫面。
+          </p>
+          <pre><code>
+#include &lt;WiFi.h&gt;
+#include &lt;AsyncTCP.h&gt;
+#include &lt;ESPAsyncWebServer.h&gt;
 
+const char* ssid = "長榮1號"; //請自訂熱點名稱
+const char* password = "12345678"; //請自訂熱點密碼(8位)
 
-        
+AsyncWebServer server(80); //開啟80埠網頁伺服器及對應 websocket伺服器
+AsyncWebSocket ws("/ws");
+
+bool ledState = 0;  //變數ledState用於紀錄LED開(1)或關(0)
+const int ledPin = 2;  //ESP32預設LED數位腳位
+
+//設定顯示網頁
+const char index_html[] PROGMEM = R"rawliteral(
+&lt;!DOCTYPE HTML>&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;ESP WebSocket伺服器&lt;/title&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;link rel="icon" href="data:,"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;h1&gt;ESP WebSocket伺服器&lt;/h1&gt;
+  &lt;/div&gt;
+  &lt;div class="content"&gt;
+    &lt;div class="card"&gt;
+      &lt;h2&gt;Output - GPIO 2&lt;/h2&gt;
+      &lt;p&gt;狀態: &lt;span id="state"&gt;%STATE%&lt;/span&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;button id="button"&gt;開/關&lt;/button&gt;&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;script&gt;
+    var gateway = `ws://${window.location.hostname}/ws`;
+    var websocket;
+    window.addEventListener('load', onLoad);
+  
+    function initWebSocket() {
+      console.log('WebSocket連接...');
+      websocket = new WebSocket(gateway); //連接WebSocket伺服器
+    
+      websocket.onopen    = onOpen;  //設定接上動作
+      websocket.onclose   = onClose; //設定斷接動作
+      websocket.onmessage = onMessage; //設定收到訊息動作
+    }
+    function onOpen(event) {
+      console.log('已連接');
+    }
+    function onClose(event) {
+      console.log('關閉連接');
+      setTimeout(initWebSocket, 2000); //重啟連接
+    }
+    function onMessage(event) {
+      var state;
+      if (event.data == "1"){
+        state = "開";
+      }
+      else{
+        state = "關";
+      }
+      document.getElementById('state').innerHTML = state;
+    }
+    function onLoad(event) {
+      initWebSocket();
+      initButton();
+    }
+    function initButton() {
+      document.getElementById('button').addEventListener('click', toggle);
+    }
+    function toggle(){
+      websocket.send('toggle');
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+)rawliteral";
+
+//傳送訊息至所有連接裝置
+void notifyClients() {
+  ws.textAll(String(ledState));
+}
+
+//判斷接收資料變數data值是否為 toggle
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+  AwsFrameInfo *info = (AwsFrameInfo*)arg;
+  if (info-&gt;final && info-&gt;index == 0 && info-&gt;len == len && info-&gt;opcode == WS_TEXT) {
+    data[len] = 0;
+    if (strcmp((char*)data, "toggle") == 0) {
+      ledState = !ledState;
+      notifyClients();
+    }
+  }
+}
+
+//設定WebSocket伺服器處理事件，
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+             void *arg, uint8_t *data, size_t len) {
+  switch (type) {
+    case WS_EVT_CONNECT:
+      Serial.printf("WebSocket client #%u connected from %s\n", client-&gt;id(), client->remoteIP().toString().c_str());
+      break;
+    case WS_EVT_DISCONNECT:
+      Serial.printf("WebSocket client #%u disconnected\n", client-&gt;id());
+      break;
+    case WS_EVT_DATA:
+      handleWebSocketMessage(arg, data, len);
+      break;
+    case WS_EVT_PONG:
+    case WS_EVT_ERROR:
+      break;
+  }
+}
+
+//設定WebSocket伺服器起動步驟
+void initWebSocket() {
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
+}
+
+//將傳回網頁中STATE變數改變為傳回值
+String processor(const String& var){
+  Serial.println(var);
+  if(var == "STATE"){
+    if (ledState){
+      return "開";
+    }
+    else{
+      return "關";
+    }
+  }
+  return String();
+}
+
+//ESP 32起始設定
+void setup() {
+  Serial.begin(115200);
+
+  //一開始關閉預設LED(GPIO 2)
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+  
+  // 設定熱點
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(ssid,password);
+
+  // 設定虛擬固定IP 192.168.1.2
+  IPAddress AP_LOCAL_IP(192, 168, 1, 2);
+  IPAddress AP_GATEWAY_IP(192, 168, 1, 4);
+  IPAddress AP_NETWORK_MASK(255, 255, 255, 0);
+  if (!WiFi.softAPConfig(AP_LOCAL_IP, AP_GATEWAY_IP, AP_NETWORK_MASK)) {
+    Serial.println("設定IP錯誤");
+    return;
+  }
+  
+  // 顯示設定IP
+  Serial.print("AP IP address: "); 
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("熱點IP位址");
+  Serial.println(IP);
+
+  //呼叫WebSocket啟動步驟
+  initWebSocket();
+
+  // 設定連接WebSocket時動作
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/html", index_html, processor);
+  });
+
+  // 啟動WebSocket伺服器
+  server.begin();
+
+}
+
+void loop() {
+   ws.cleanupClients();
+  digitalWrite(ledPin, ledState);
+}
+</code></pre>          
+        </div>       
         
                   
       </div>
