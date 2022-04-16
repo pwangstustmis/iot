@@ -62,13 +62,13 @@
           </p>
           <ul>
             <li>
-              <span class="text-danger">站台(WIFI_STA)</span>：將ESP 32當作WiFi的客戶端，也就是說必須連接熱點或分享器才能連上網路。
+              <span class="text-danger">ESP32設為站台(WIFI_STA)</span>：將ESP 32當作WiFi的客戶端，也就是說必須連接熱點或分享器才能連上網路。
             </li>
             <li>
-              <span class="text-danger">熱點(WIFI_AP)</span>：將ESP 32設定為熱點，讓其他WiFi裝置能連接到ESP 32。
+              <span class="text-danger">ESP32設為熱點(WIFI_AP)</span>：將ESP 32設定為熱點，讓其他WiFi裝置能連接到ESP 32。
             </li>
             <li>
-              <span class="text-danger">站台熱點(WIFI_STA_AP)</span>：將ESP 32可設定為熱點或站台。
+              <span class="text-danger">ESP32設為站台熱點(WIFI_STA_AP)</span>：將ESP 32可設定為熱點或站台。
             </li>
           </ul>
           <p>
@@ -80,13 +80,13 @@
         </div>
 
         <div class="px-3">
-          <h3 class="text-dark">WIFI站台模式</h3>
+          <h3 class="text-dark">ESP32設為WIFI站台模式</h3>
           <p>
-            ESP32 WiFi站台模式透過外部熱點接網際網路如下圖：
+            ESP32 WiFi站台模式如下圖：
           </p>
           <p><img src="imgs/wifi/wifi-sta.png"></p>
           <p>
-            ESP32 WiFi站台模式(<span class="text-danger">WiFi.mode(WIFI_STA)</span>)可透過 <span class="text-danger">WiFi.scanNetworks()</span> 命令取得外部熱點個數並藉由 <span class="text-danger">WiFi.SSID、WiFi.RSSI、WiFi.encryptionType</span> 來取得熱點名稱、訊號強度與加密方式(WIFI_AUTH_OPEN、WIFI_AUTH_WEP、WIFI_AUTH_WPA_PSK、WIFI_AUTH_WPA2_PSK、WIFI_AUTH_WPA_WPA2_PSK)，上述加密方式對應至數字 0, 1, 2, 3, 4。以下程式設定ESP32 WiFi站台模式，掃描附近熱點並輸出熱點名稱、訊號強度與加密方式。
+            站台模式是將ESP32視為獨立的電腦或手機，ESP32與外部溝通必須透過額外的分享器或路由器，要連接外部的分享器或路由器，ESP32 WiFi站台模式(<span class="text-danger">WiFi.mode(WIFI_STA)</span>)透過 <span class="text-danger">WiFi.scanNetworks()</span> 命令取得外部熱點資訊，並藉由訊息中 <span class="text-danger">WiFi.SSID、WiFi.RSSI、WiFi.encryptionType</span> 來取得熱點名稱、訊號強度與加密方式，加密方式為數字 0, 1, 2, 3, 4分別代表(WIFI_AUTH_OPEN、WIFI_AUTH_WEP、WIFI_AUTH_WPA_PSK、WIFI_AUTH_WPA2_PSK、WIFI_AUTH_WPA_WPA2_PSK)。以下程式設定ESP32 WiFi站台模式，掃描附近熱點並輸出熱點名稱、訊號強度與加密方式。
           </p>
 <pre><code>
 #include "WiFi.h" //匯入WiFi程式庫
@@ -102,11 +102,11 @@ void setup() {
     Serial.print("熱點:");
     Serial.print(i+1);
     Serial.print(": ");
-    Serial.print(WiFi.SSID(i));
+    Serial.print(WiFi.SSID(i)); //印出熱點SSID名稱
     Serial.print(" (");
-    Serial.print(WiFi.RSSI(i));
+    Serial.print(WiFi.RSSI(i));  //印出熱點訊號強度
     Serial.print(")");
-    Serial.println(WiFi.encryptionType(i));
+    Serial.println(WiFi.encryptionType(i));  //印出熱點加密方式
     delay(10);
   }
 }
@@ -116,7 +116,7 @@ void loop() {
 }
 </code></pre>
         <p>
-          連接熱點須執行 <span class="text-danger">WiFi.begin(熱點SSID名稱,連接密碼)</span>，連接後可藉由 <span class="text-danger">WiFi.status()</span> 命令傳回現在連接狀態，當連接狀態傳回 <span class="text-danger">WL_CONNECTED</span> 表示連上熱點。下列程式將連接同學設定熱點：
+          當ESP32需連接熱點時咬使用 <span class="text-danger">WiFi.begin(熱點SSID名稱,連接密碼)</span>命令，命令執行後可藉由 <span class="text-danger">WiFi.status()</span> 命令傳回現在連接狀態，當連接狀態傳回 <span class="text-danger">WL_CONNECTED</span> 表示連上熱點。下列程式將連接設定熱點：
         </p>
         <pre><code>
 #include "WiFi.h" //匯入WiFi程式庫
@@ -140,13 +140,13 @@ void loop() {
           </code></pre>
         </div>
         <div class="px-3">
-          <h3 class="text-dark">WIFI熱點模式</h3>
+          <h3 class="text-dark">ESP32設為WIFI熱點模式</h3>
           <p>
             ESP32 WiFi熱點模式如下圖：
           </p>
           <p><img src="imgs/wifi/wifi-ap.png"></p>
           <p>
-            ESP32 WiFi熱點模式(<span class="text-danger">WiFi.mode(WIFI_AP)</span>)可透過 <span class="text-danger">WiFi.softAP(站台名稱,站台密碼)</span> 來設定站台名稱與連接密碼，請注意站台名稱與連接密碼需置於雙引號中。熱點設定完畢後，可利用 <span class="text-danger">WiFi.softAPIP()</span> 命令取得熱點IP位址，請注意IP位址資料類型為 <span class="text-danger">IPAddress</span>。
+            ESP32 WiFi熱點模式是將自己設為分享器或熱點，讓其他的使用者可以連到ESP32。使用者可透過命令(<span class="text-danger">WiFi.mode(WIFI_AP)</span>)設定ESP32為WiFi熱點，之後利用命令 <span class="text-danger">WiFi.softAP(站台名稱,站台密碼)</span> 來設定熱點的名稱與連接密碼，請注意站台名稱與連接密碼需置於雙引號中。熱點設定完畢後，可利用 <span class="text-danger">WiFi.softAPIP()</span> 命令取得現在熱點IP位址，請注意IP位址資料類型為 <span class="text-danger">IPAddress</span>。
           </p>
 <pre><code>
 #include "WiFi.h" //匯入WiFi程式庫
@@ -164,7 +164,42 @@ void loop() {
 
 }
 </code></pre>
+          <p>
+            使用者如果使用預設熱點IP位址如 <span class="text-danger">WiFi.softAPIP()</span>，最大的問題是無法預知IP位址，雖然ESP 32預設IP位址為<span class="text-danger">192.168.4.1</span>，但是如果使用者可以設定自己希望的IP，這對應用的開發是非常便利的，因此ESP 32可以透過下列命令設定熱點的IP。下列程式首先利用<span class="text-danger">AP_LOCAL_IP</span>命令設定IP，之後利用<span class="text-danger">AP_GATEWAY_IP、AP_NETWORK_MASK</span>設定閘道器的IP與IP位址遮罩，最後透過<span class="text-danger">WiFi.softAPConfig</span>來設定IP，<span class="text-danger">WiFi.softAPConfig</span>命令傳回值如果為<span class="text-danger">false</span>代表設定不成功，<span class="text-danger">請注意：設定IP命令必須放在 WiFi.softAP命令之後</span>。
+          </p>
+          <pre><code>
+// 設定虛擬固定IP 192.168.1.2
+  IPAddress AP_LOCAL_IP(192, 168, 1, 2);
+  IPAddress AP_GATEWAY_IP(192, 168, 1, 4);
+  IPAddress AP_NETWORK_MASK(255, 255, 255, 0);
+  if (!WiFi.softAPConfig(AP_LOCAL_IP, AP_GATEWAY_IP, AP_NETWORK_MASK)) {
+    Serial.println("設定IP錯誤");
+    return;
+  }
+          </code></pre>
         </div>
+        <div class="px-3">
+          <h3 class="text-dark">WiFi熱點應用架構思考</h3>
+          <p>
+            使用者開發WiFi應用時需考量應用屬於單向溝通或雙向溝通，單向溝通是<span class="text-danger">使用者-&gt;ESP32</span>或是<span class="text-danger">ESP32-&gt;使用者</span>，雙向溝通是<span class="text-danger">使用者&lt;-&gt;ESP32</span>或者是<span class="text-danger">使用者-&gt;ESP32、ESP32-&gt;使用者</span>。接下來針對上述溝通方式提供可能解決方案。
+          </p>
+          <ul>
+            <li>
+              <span class="text-danger">單向溝通(使用者-&gt;ESP32)</span>：可使用<span class="text-danger">WiFi熱點+網頁伺服器</span>或<span class="text-danger">WiFi熱點+WebSocket</span>。
+            </li>
+            <li>
+              <span class="text-danger">單向溝通(ESP32-&gt;使用者)</span>：可使用<span class="text-danger">WiFi熱點+WebSocket</span>。
+            </li>
+            <li>
+              <span class="text-danger">雙向溝通(使用者&lt;-&gt;ESP32)</span>：可使用<span class="text-danger">WiFi熱點+網頁伺服器</span>或<span class="text-danger">WiFi熱點+WebSocket</span>。
+            </li>
+            <li>
+              <span class="text-danger">雙向溝通(使用者-&gt;ESP32、ESP32-&gt;使用者)</span>：可使用<span class="text-danger">WiFi熱點+WebSocket</span>。
+            </li>
+          </ul>
+          
+        </div>
+
         <div class="px-3">
           <h3 class="text-dark">WIFI熱點模式+內建網頁伺服器</h3>
           <p>
@@ -180,7 +215,7 @@ void setup() {
   IPAddress IP = WiFi.softAPIP();
   Serial.print("熱點IP位址");
   Serial.println(IP);
-  server.begin();
+  server.begin();  //開啟網頁伺服器
 }
                 
 void loop() {
@@ -188,9 +223,10 @@ void loop() {
 }
 </code></pre>
           <p>
-            網頁伺服器開啟後，執行程式(loop())中，首先利用命令 <span class="text-danger">server.available()</span> 檢查是否有使用者連接至伺服器，<span class="text-danger">server.available()</span> 傳回 <span class="text-danger">WiFiClient</span> 值，我們用條件判斷檢查是否有傳回值，如果有而且使用者在繼續連線下，我們將透過 <span class="text-danger">client.read()</span> 取得使用者傳送資料，一直讀到 Enter鍵(\n)後再判斷使用者傳送資料。
+            網頁伺服器開啟後，執行程式(loop())中，首先利用命令 <span class="text-danger">server.available()</span> 檢查是否有使用者連接至伺服器，如果有而且使用者在連線下，我們透過 <span class="text-danger">client.read()</span> 取得使用者傳送資料，一直讀到 Enter鍵(\n)後再判斷使用者傳送資料。
           </p>
-          <p>完整網頁控制數位腳位16 LED開關原始碼</p>
+          <p>下列程式使用瀏覽器網址控制數位腳位16 LED開關，下列程式在使用者透過WiFi接上ESP32之後，開啟瀏覽器並輸入<span class="text-danger">192.168.4.1/on</span>開啟LED，輸入<span class="text-danger">192.168.4.1/off</span>關閉LED。</p>
+          <p class="text-success">練習：請使用先前設定固定IP的作法，將ESP32 IP設為<span class="text-danger">192.168.1.2</span>，開啟瀏覽器並輸入<span class="text-danger">192.168.1.2/on</span>開啟LED，輸入<span class="text-danger">192.168.1.2/off</span>關閉LED。</p>
 <pre><code>
 #include "WiFi.h" //匯入WiFi程式庫
 
@@ -230,6 +266,96 @@ void loop() {
   }
 }
 </code></pre>
+          <p>
+            另一種檢查使用者輸入的方法是透過事件設定，ESP32事件設定伺服器為<span class="text-danger">WebServer</span>，因此在第二行必須匯入<span class="text-danger">#include &lt;WebServer.h&gt;</span>。事件設定利用<span class="text-danger">server.on</span>命令，<span class="text-danger">"/"</span>設定使用者在網址列輸入<span class="text-danger">192.168.4.1</span>動作<span class="text-danger">evt_root</span>，<span class="text-danger">"/on"</span>設定使用者在網址列輸入<span class="text-danger">192.168.4.1/on</span>動作<span class="text-danger">evt_on</span>，<span class="text-danger">"/off"</span>設定使用者在網址列輸入<span class="text-danger">192.168.4.1/off</span>動作<span class="text-danger">evt_off</span>。
+          </p>
+          <p>下列程式使用瀏覽器網址控制數位腳位16 LED開關，下列程式在使用者透過WiFi接上ESP32之後，開啟瀏覽器並輸入<span class="text-danger">192.168.4.1/on</span>開啟LED，輸入<span class="text-danger">192.168.4.1/off</span>關閉LED。</p>
+          <p class="text-success">練習：請使用先前設定固定IP的作法，將ESP32 IP設為<span class="text-danger">192.168.1.2</span>，開啟瀏覽器並輸入<span class="text-danger">192.168.1.2/on</span>開啟LED，輸入<span class="text-danger">192.168.1.2/off</span>關閉LED。</p>
+<pre><code>
+#include "WiFi.h" //匯入WiFi程式庫
+#include &lt;WebServer.h&gt;
+
+WebServer server(80); //設定網頁伺服器變數名稱為 server  
+String indata; //用於儲存使用者傳送資料     
+void setup() {
+  Serial.begin(115200);
+  pinMode(16,OUTPUT); //設定數位腳位16控制LED開關
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP("長榮1號","12345678"); //密碼一定要8位
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("熱點IP位址");
+  Serial.println(IP);
+  server.on("/",evt_root);  //當使用者輸入 192.168.4.1 時執行evt_root函數
+  server.on("/on",led_on);  //當使用者輸入 192.168.4.1/on 時執行led_on函數
+  server.on("/off",led_off); //當使用者輸入 192.168.4.1/off 時執行led_off函數
+
+  server.begin();
+}
+void evt_root() {
+  server.send(200, "text/html", "");
+}
+void led_on() {
+  digitalWrite(16, HIGH);
+}
+void led_off() {
+  digitalWrite(16, LOW);
+}
+
+void loop() {
+  server.handleClient();
+}
+</code></pre>
+        </div>
+        <div class="px-3">
+          <h3 class="text-dark">WIFI熱點模式+內建網頁伺服器+參數傳遞</h3>
+          <p>
+            應用不一定像上述例子只有<span class="text-danger">開與關</span>，有時必須能傳遞需要的訊息，例如亮度值或其他，因此這個單元將延伸上述的例子包含參數的傳遞。這個單元將藉由<span class="text-danger">HTTP_GET</span>的模式傳遞參數，所謂<span class="text-danger">HTTP_GET</span>的模式是指網址咧輸入像<span class="text-danger">192.168.4.1/on?led1=1&led2=0</span>，網址<span class="text-danger">?</span>以後為參數，參數以<span class="text-danger">&</span>符號作為分隔，所以<span class="text-danger">192.168.4.1/on?led1=1&led2=0</span>網址列包含兩個參數，每個參數為<span class="text-danger">餐數名稱=參數值</span>的方式，所以<span class="text-danger">192.168.4.1/on?led1=1&led2=0</span>網址列包含兩個參數<span class="text-danger">參數led1值為1</span>、<span class="text-danger">參數led2值為0</span>。下列程式以<span class="text-danger">WiFiServer、WebServer</span>為例來說明不同伺服器參數的處理方式，<span class="text-danger">WiFiServer</span>將網址列儲存於<span class="text-danger">String</span>(字串變數)，因此我們會用到字串變數的<span class="text-danger">indexof、substring、toInt</span>函數，<span class="text-danger">indexof("尋找字串")</span>會傳回串變數中第一個尋找字串的開始位置，<span class="text-danger">substring(開使位置)</span>會傳回串變數開始位置到最後的值，<span class="text-danger">toInt()</span>會將數字字串變成數字。
+          </p>
+          <p class="text-success">練習：請將下列程式改為帶入兩個參數，第一個參數值設定腳位值，第二個參數值設定亮度值，例如<span class="text-danger">192.168.4.1/on?led1=4&val=100</span></p>
+          <pre><code>
+#include "WiFi.h" //匯入WiFi程式庫
+
+WiFiServer server(80); //設定網頁伺服器變數名稱為 server  
+String indata; //用於儲存使用者傳送資料
+String params;     
+void setup() {
+  Serial.begin(115200);
+  
+  ledcSetup(0,5000,8);
+  ledcAttachPin(4,0);
+  
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP("長榮1號","12345678"); //密碼一定要8位
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("熱點IP位址");
+  Serial.println(IP);
+  server.begin();
+}
+    
+void loop() {
+  WiFiClient client = server.available(); //取得連接使用者並存於變數client
+  while (client.connected()) {
+    char c = client.read(); //逐字讀入傳送資料
+    indata += c; //將讀入字存到變數 indata
+    if (c=='\n') {
+      if (client) { //設定網際網路HTTP傳回擋頭
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-type:text/html");
+        client.println("Connection: close");
+        client.println();
+      }
+      if (indata.indexOf("GET /on") &gt;= 0) { //使用者網址列 伺服器ip/on 則開啟LED
+        params=indata.substring(indata.indexOf("?")+1); //將網址列 ? 之後存到變數params
+        ledcWrite(0,params.substring(params.indexOf("=")+1).toInt()); //將第一個參數 = 之後取出並轉為數子輸出至數位腳位 4
+      } else if (indata.indexOf("GET /off") &gt;= 0) {  //使用者網址列 伺服器ip/off 則關閉LED
+        ledcWrite(0,0);
+      }
+      indata="";
+      client.stop();
+    }
+  }
+}
+          </code></pre>
         </div>
 
         <div class="px-3">
